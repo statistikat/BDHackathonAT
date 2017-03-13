@@ -4,8 +4,3 @@ Team members:
 Johannes Gussenbauer
 Marlene Weinauer
 Alexander Kowarik
-
-TEST TEST
-
-
-NOCH MEHR TESTS
