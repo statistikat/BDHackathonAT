@@ -20,5 +20,5 @@ setnames(doc,colnames(doc),c("GeneralId","PublicationCountry","GrabDate","YearGr
                              "Industry_Level_1","WorkingHours"))
 
 
-
+save(prof,prof_new,requ,expi,doc,file="/data/cedefop.Rdata",compress=TRUE)
 
