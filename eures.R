@@ -3,6 +3,7 @@ library(VIM);library(data.table);
 person <- fread("eures/CV data DWH 2016-12-01 CSV/CV_MAIN.csv")
 res_int <- fread("eures/CV data DWH 2016-12-01 CSV/CV_RESIDENCE_INTER.csv")
 res <- fread("eures/CV data DWH 2016-12-01 CSV/CV_RES_COUNTRY.csv")
+sk <- fread("eures/CV data DWH 2016-12-01 CSV/CV_SKILL.csv")
 person <- merge(person,res_int,by="ID",all.x=TRUE,all.y=FALSE)
 person <- merge(person, res, by="RES_COUNTRY_ID",all.x=T,all.y=FALSE)
 g <- person[RES_COUNTRY=="Germany"]
