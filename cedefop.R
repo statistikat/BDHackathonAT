@@ -13,4 +13,8 @@ colnames(expi) <- colnames(prof_new) <- colnames(requ) <- c("GeneralId","Publica
 
 
 doc <- fread("cedefop/ft_document_en.csv",header=FALSE)
-doc
+setnames(doc,colnames(doc),c("GeneralId","PublicationCountry","GrabDate","YearGrabDate","MonthGrabDate",
+                             "DayGrabDate","ExpireDate","YearExpireDate","MonthExpireDate","DayExpireDate",
+                             "Esco_Level_4","Esco_Level_3","Esco_Level_2","Esco_Level_1","Nut_Level_3",
+                             "Nut_Level_2","Nut_Level_1","Nut_Level_0","Contract","EducationalLevel","Industry_Level_2",
+                             "Industry_Level_1","WorkingHours"))
