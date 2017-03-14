@@ -119,7 +119,7 @@ for(i in 1:length(index)){
   
   skills.i <- skills.i[!GeneralId%in%job_person_out$GeneralId]
   
-  donor_help <- germany[!ID%in%job_person_out$PersID]
+  donor_help <- germany[!PersID%in%job_person_out$PersID]
   setkey(donor_help,SKILLS)
   
   while(nrow(skills.i)>0){
@@ -134,7 +134,7 @@ for(i in 1:length(index)){
 
     skills.i <- skills.i[!GeneralId%in%job_person_out$GeneralId]
     
-    donor_help <- donor_help[!ID%in%job_person_out$PersID]
+    donor_help <- donor_help[!PersID%in%job_person_out$PersID]
     setkey(donor_help,SKILLS)
     
   }
