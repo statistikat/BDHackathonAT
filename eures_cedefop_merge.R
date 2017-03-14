@@ -8,9 +8,16 @@ source("cedefop.R")
 
 load("/data/persons.RData")
 rm(germany2)
-gerLFS2 <- merge(gerLFS2,germany[,.(ID,SKILLS)],by="ID",allow.cartesian=TRUE)
+#gerLFS2[ID%in%unique(ID)[1],round(1/COEFF*10)]
 gerLFS2.na <- gerLFS2[,lapply(.SD,function(z){!all(is.na(z))})]
 gerLFS2 <- gerLFS2[,colnames(gerLFS2)[unlist(gerLFS2.na)],with=FALSE]
+
+gerLFS2 <- gerLFS2[ILOSTAT==2,.SD[rep(1:.N,unique(round(COEFF*1000)))],by="LFSID"]
+gerLFS2[,PersID:=1:nrow(gerLFS2)]
+
+gerLFS2 <- merge(gerLFS2,germany[,.(ID,SKILLS)],by="ID",allow.cartesian=TRUE)
+save(gerLFS2,file="/data/gerLFS2_skills.RData",compress=TRUE)
+
 
 colnames(germany)
 
@@ -69,6 +76,8 @@ prof.test <- prof[Esco_Level_1=="Professionals"]
 index <- unique(prof$GeneralId)
 prof.test[,.N,by="GeneralId"][N>3]
 
+colnames(germany)
+germany <- copy(gerLFS2[,.(SKILLS,PersID)])
 setkey(prof,GeneralId)
 setkey(germany,SKILLS)
 
@@ -95,12 +104,14 @@ for(i in 1:length(index)){
       j <- j+1
     }
   }
-  
+
+  germany <- germany[SKILLS%in%skills.i$SKILL]
   #germany[skills.i,.N,by=EACHI]
   #skills.i[,germany[SKILL],by=GeneralId]
+  #germany.skills.i <- merge(skills.i,germany[SKILLS%in%skills.i$SKILL,.(SKILLS,ID)],by.x="SKILL",by.y="SKILLS",all.x=TRUE)
   job_person_match <- skills.i[,sample_help(germany[SKILL],bound=ceiling(.N*.3)),by=GeneralId]
   
-  job_person_out <- job_person_match[is.na(PersID)]
+  job_person_out <- job_person_match[is.na(PersID),.(GeneralId,PersID)]
   
   job_person_match <- job_person_match[!is.na(PersID),.(GeneralId=GeneralId[sample_help2(which.max(prob))]),by=PersID]
   
@@ -114,40 +125,39 @@ for(i in 1:length(index)){
   while(nrow(skills.i)>0){
     
     job_person_match <- skills.i[,sample_help(donor_help[SKILL],bound=ceiling(.N*.3)),by=GeneralId]
-    job_person_out <- job_person_match[is.na(PersID)]
+    
+    job_person_out <- rbind(job_person_out,job_person_match[is.na(PersID),.(GeneralId,PersID)])
+    
     job_person_match <- job_person_match[!is.na(PersID),.(GeneralId=GeneralId[sample_help2(which.max(prob))]),by=PersID]
+    
     job_person_out <- rbind(job_person_match,job_person_out)
 
-    skills.i <- skills.i[!GeneralId%in%job_person_match$GeneralId]
+    skills.i <- skills.i[!GeneralId%in%job_person_out$GeneralId]
     
-    donor_help <- donor_help[!ID%in%job_person_match$PersID]
+    donor_help <- donor_help[!ID%in%job_person_out$PersID]
     setkey(donor_help,SKILLS)
     
   }
   
   # number of jobs with multiple selections
-  setnames(job_person_match,c("GeneralId","V1"),c("JobID","PersID"))
-  potential_employee <- germany[.(skills.i$SKILL),.N,by=ID][N>=ceiling(length(skills.i)*.5)]
-  if(nrow(potential_employee)>0){
-    gets_job <- potential_employee[,sample(ID,1,prob=N)]
-    germany[ID==gets_job,HIRED:=TRUE]
-  }
+  setnames(job_person_out,c("GeneralId"),c("JobID"))
+
 }
 
 sample_help <- function(dat,bound){
   
-  if(any(!is.na(dat$ID))){
-    potential_employee <- dat[,.N,by=ID][N>=bound]
+  if(any(!is.na(dat$PersID))){
+    potential_employee <- dat[,.N,by=PersID][N>=bound]
     #potential_employee <- dat[,.N,by=ID]
     if(nrow(potential_employee)>0){
       probs <- potential_employee$N/sum(potential_employee$N)
       sampindex <- sample(nrow(potential_employee),1,prob=probs)
-      return(list(prob=probs[sampindex],PersID=potential_employee$ID[sampindex]))
+      return(list(prob=probs[sampindex],PersID=potential_employee$PersID[sampindex]))
     }else{
-      return(list(prob=NA_real_,PersID=NA_character_))
+      return(list(prob=NA_real_,PersID=NA_integer_))
     }
   }else{
-    return(list(prob=NA_real_,PersID=NA_character_))
+    return(list(prob=NA_real_,PersID=NA_integer_))
   }
 }
 
