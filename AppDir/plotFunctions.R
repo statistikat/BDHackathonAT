@@ -13,5 +13,8 @@ plotBar <- function(skillmiss, jobgruppe){ #bei jobgruppe namen eingeben
     guides(fill=FALSE) +
     scale_fill_gradient(low = "red", high = "green")+
     ggtitle("Top 5 Skills") +
+    theme(axis.text.x = element_text(size=11), 
+          axis.text.y = element_text(size=11), 
+          plot.title=element_text(size=14,face="bold")) +
     ylab("")
 }
