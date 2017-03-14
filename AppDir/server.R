@@ -9,7 +9,16 @@ function(input, output, session) {
       color = "aqua"
     )
   })
-  
+  output$myMap <- renderLeaflet({
+    leaflet(countr) %>%
+      addTiles() %>%
+      addPolygons(
+                  fillOpacity = .2,
+                  weight = 1,
+                  stroke = T,
+                  color = "#ff0000"
+      )
+  })
   output$totalseeker <- renderValueBox({
     valueBox(
       1e6,
@@ -42,6 +51,13 @@ function(input, output, session) {
   output$plotgroup <- renderPlot({
     print(plotBar(skillmiss,input$jobgp))
   }) 
+  
+  observeEvent(input$myMap_shape_click, {
+    updateSelectInput(session, "Country",
+                      selected = "Germany"
+    )
+    updateTabItems(session, "tabs", selected = "globalview")
+  })
   
   
 }
