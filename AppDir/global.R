@@ -7,6 +7,8 @@ library(data.table)
 library(ggplot2)
 load("/data/jobgroups.RData")
 load("/data/bubbleData.RData")
+load("/data/groupjobs.RData")
+load("/data/skillmiss.RData")
 source("plotFunctions.R")
 
 

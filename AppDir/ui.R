@@ -1,8 +1,6 @@
 dashboardPage(
-  dashboardHeader(title = "Austria - BD Hackathon"),
+  dashboardHeader(title = "Jobs / Skills Dashboard"),
   dashboardSidebar(
-    selectInput("jobgp", label = h3("Job group"), 
-                choices = as.list(jg)),
     sidebarMenu(
       menuItem("Skills - Jobs", tabName = "globalview"),
       menuItem("Jobgroup view", tabName = "groupview")
@@ -12,28 +10,29 @@ dashboardPage(
     tabItems(
       tabItem("globalview",
               fluidRow(
-                valueBoxOutput("rate"),
-                valueBoxOutput("count"),
-                valueBoxOutput("users")
+                valueBoxOutput("totaljobs"),
+                valueBoxOutput("totalseeker")
               ),
               fluidRow(
                 box(
-                  width = 8, status = "info", solidHeader = TRUE,
-                  title = "Popularity by package (last 5 min)",
-                  bubblesOutput("packagePlot", width = "100%", height = 600)
-                ),
-                box(
-                  width = 4, status = "info",
-                  title = "Top packages (last 5 min)",
-                  tableOutput("packageTable")
+                  width = 13, status = "info", solidHeader = TRUE,
+                  title = "Job advertisments per category",
+                  plotOutput("distPlot")
                 )
               )
       ),
       tabItem("groupview",
               fluidRow(
-                valueBoxOutput("rate2"),
-                valueBoxOutput("count2"),
-                valueBoxOutput("users2")
+                selectInput("jobgp", choices = as.list(jg),label="",selected="Science and engineering professionals"),
+                valueBoxOutput("groupjobs"),
+                valueBoxOutput("groupseeker")
+              ),
+              fluidRow(
+                box(
+                  width = 13, status = "info", solidHeader = TRUE,
+                  title = "Top 5 needed Skills",
+                  plotOutput("plotgroup")
+                )
               )
       )
     )
