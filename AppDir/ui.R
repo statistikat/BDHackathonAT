@@ -1,13 +1,18 @@
 dashboardPage(
   dashboardHeader(title = "Jobs / Skills Dashboard"),
   dashboardSidebar(
-    sidebarMenu(
+    sidebarMenu(id = "tabs",
+      menuItem("Europe", tabName = "map"),
+      selectInput("Country", choices = as.list(c("Czech Republic", "Germany","Ireland","United Kingdom","---")),label="",selected="---"),
       menuItem("Skills - Jobs", tabName = "globalview"),
       menuItem("Jobgroup view", tabName = "groupview")
     )
   ),
   dashboardBody(
     tabItems(
+       tabItem("map",
+               leafletOutput('myMap', width = "80%", height = 500)
+              ),
       tabItem("globalview",
               fluidRow(
                 valueBoxOutput("totaljobs"),
