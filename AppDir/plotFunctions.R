@@ -6,7 +6,7 @@ library(plotly)
 #}
 
 plotMain <- function(bubbleData){
-  g <- ggplot(bubbleData,aes(x=quarter,y=Jobgroup,size=value,color=pressure))+
+  g <- ggplot(bubbleData,aes(x=QUARTER,y=job_groups,size=value,color=pressure))+
     geom_point()+theme_bw()+scale_colour_gradient(low = "indianred3", high = "lightsteelblue")+theme(legend.position = "none")+ 
     scale_size_continuous(range=c(8,14)) + # größen einstellen wie wir es brauchen 
     theme(axis.text.x = element_text(size=13), 
