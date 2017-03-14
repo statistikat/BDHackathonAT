@@ -4,6 +4,8 @@ prof <- fread("/data/cedefop/ft_skill_profession_en.csv",header=FALSE)
 setnames(prof,colnames(prof),c("GeneralId","PublicationCountry","Esco_Level_4","Esco_Level_3",
                              "Esco_Level_2","Esco_Level_1","Skill_Esco_Level_4","Skill_Esco_Level_3",
                              "Skill_Esco_Level_2","Skill_Esco_Level_1","Skill_Esco_Level_0"))
+prof <- prof[PublicationCountry=="DEUTSCHLAND"]
+prof <- 
 
 expi <- fread("/data/cedefop/ft_skill_profession_experience_en.csv",header=FALSE)
 prof_new <- fread("/data/cedefop/ft_skill_profession_new_en.csv",header=FALSE)
