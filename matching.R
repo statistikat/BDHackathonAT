@@ -18,11 +18,73 @@ setnames(doc,colnames(doc),c("GeneralId","PublicationCountry","GrabDate","YearGr
                              "Esco_Level_4","Esco_Level_3","Esco_Level_2","Esco_Level_1","Nut_Level_3",
                              "Nut_Level_2","Nut_Level_1","Nut_Level_0","Contract","EducationalLevel","Industry_Level_2",
                              "Industry_Level_1","WorkingHours"))
-doc[,QUARTER:=if(MonthGrabDate[1]<=3){'Q1'}else if(MonthGrabDate[1]<=6){'Q2'}else if(MonthGrabDate[2]<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
+
+
+doc[,QUARTER:=if(MonthGrabDate[1]<=3){'Q1'}else if(MonthGrabDate[1]<=6){'Q2'}else if(MonthGrabDate[1]<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
 job_quarter <- unique(doc[,.(GeneralId,QUARTER)])
 save(job_quarter,file="/data/job_quarter.RData",compress=TRUE)
 
+load("/data/jvs.RData")
 
+uindex <- c(6,5,10,3,1,9,0,2,10,9,11,7,10,9,4,10,8,10,2,0,2)
+ulevels <- doc[,unique(Industry_Level_1)]
+
+doc[,NACE:=uindex[ulevels%in%Industry_Level_1],by=Industry_Level_1]
+
+doc <- unique(doc,by="GeneralId")
+doc <- doc[PublicationCountry=="DEUTSCHLAND"]
+doc <- doc[GeneralId%in%prof$GeneralId]
+
+
+quart <- c("Q1","Q2","Q3","Q4")
+
+out <- NULL
+for(i in 0:11){
+  if(i==0){
+    out_iq <- doc[NACE==0]
+    out_iq[,WEIGHT:=1]
+    out <- rbind(out,out_iq)
+  }else{
+    for(q in 1:4){
+      out_iq <- doc[NACE==i&QUARTER==quart[q]]
+      if(nrow(out_iq)>0){
+        out_iq[,WEIGHT:=unlist(jvs[i][,c(2+q),with=FALSE])*1000/.N]
+        if(out_iq$WEIGHT[1]<1){
+          out_iq[,WEIGHT:=1]
+        }
+        out <- rbind(out,out_iq)
+      }
+    }
+  }
+}
+
+job_weights <- out[,.(GeneralId,WEIGHT)]
+save(job_weights,file="/data/job_weights.RData",compress=TRUE)
+
+load("/data/job_weights.RData")
+prof <- prof[GeneralId%in%job_weights$GeneralId]
+prof <- merge(prof,job_weights,by="GeneralId",all.x=TRUE)
+
+random_round <- function(x){
+  
+  if(sample(c(0,1),1)==1){
+    xr <- ceiling(unique(x$WEIGHT))
+  }else{
+    xr <- floor(unique(x$WEIGHT))
+  }
+  n <- nrow(x)
+  x <- x[rep(1:n,xr)]
+  x[,ID_new:=sort(rep(1:xr,n))]
+
+  return(x)
+}
+
+prof <- prof[,.(GeneralId,Skill_Esco_Level_1,Skill_Esco_Level_2,Skill_Esco_Level_3,Skill_Esco_Level_4,WEIGHT)]
+
+prof <- prof[,random_round(.SD),by="GeneralId"]
+
+
+save(prof,file="/data/prof_with_weights.RData",compress=TRUE)
 
 
 ################################################################################
@@ -62,7 +124,7 @@ split_data <- function(dat,N=10){
     id_i <- uniqueid[((i-1)*nparts+1):min(nrow(dat),(i*nparts))]
     finalparts <- c(finalparts,rep(i,nrow(dat[GeneralId%in%id_i])))
   }
-
+  
   dat[,parts:=finalparts]
   
   dat_out <- split(dat,as.factor(dat$parts))
@@ -84,11 +146,14 @@ germany <- gerLFS2[,.(SKILLS,PersID)]
 save(germany,file="/data/germany_test.RData",compress=TRUE)
 #load("/data/germany_test.RData")
 
-prof <- prof[,.(GeneralId,Skill_Esco_Level_1,Skill_Esco_Level_2,Skill_Esco_Level_3,Skill_Esco_Level_4)]
+
 save(prof,file="/data/prof_test.RData",compress=TRUE)
 
 load("/data/germany_test.RData")
-load("/data/prof_test.RData")
+#load("/data/prof_test.RData")
+load("/data/prof_with_weights.RData")
+prof[,GeneralId:=paste(GeneralId,ID_new,sep="_")]
+prof[,ID_new:=NULL]
 setkey(prof,GeneralId)
 setkey(germany,SKILLS)
 index <- unique(prof$GeneralId)
@@ -98,6 +163,8 @@ i <- 1:10000
 
 # required skills for job index[i]
 skills.i <- prof[.(index[i]),.(GeneralId,SKILL=Skill_Esco_Level_4)]
+#skills.i <- prof[,.(GeneralId,SKILL=Skill_Esco_Level_4)]
+
 j <- 1
 if(class(skills.i)[1]=="character"){
   
@@ -116,9 +183,38 @@ if(class(skills.i)[1]=="character"){
   }
 }
 
+# new ID
+#skills.i[,GeneralId2:=GeneralId]
+# skills.i[,GeneralId_new:=sort(rep(1:(.N/length(unique(SKILL))),length(unique(SKILL)))),by=GeneralId]
+# 
+# help_index <- function(SK,N){
+#   
+#   freq <- table(SK)
+#   
+#   if(length(unique(freq))==1){
+#     return(1:N)
+#   }
+#   if(){
+#     
+#   }else{
+#     
+#     n <- length(SK)
+#     
+#     m <- n%%2
+#     return()
+#   }
+#   
+#   
+#   return(sort(rep(1:(.N/length(freq)),length(freq))))
+# }
+# 
+# }
+# 
+# skills.i[,GeneralId:=paste(GeneralId,GeneralId_new,sep="_")]
+# skills.i[,GeneralId_new:=NULL]
 
 germany <- germany[SKILLS%in%skills.i$SKILL]
-rm(prof,next_ESCO,null_index)
+rm(next_ESCO,null_index)
 #germany[skills.i,.N,by=EACHI]
 #skills.i[,germany[SKILL],by=GeneralId]
 #germany.skills.i <- merge(skills.i,germany[SKILLS%in%skills.i$SKILL,.(SKILLS,ID)],by.x="SKILL",by.y="SKILLS",all.x=TRUE)
@@ -150,7 +246,7 @@ while(nrow(skills.i)>0){
   }else{
     job_person_match <- skills.i[,sample_help(donor_help[SKILL],bound=ceiling(.N*.3)),by=GeneralId]
   }
-
+  
   
   job_person_out <- rbind(job_person_out,job_person_match[is.na(PersID),.(GeneralId,PersID)])
   
@@ -168,7 +264,7 @@ while(nrow(skills.i)>0){
 # number of jobs with multiple selections
 setnames(job_person_out,c("GeneralId"),c("JobID"))
 
-  
+
 
 
 job_person_out
