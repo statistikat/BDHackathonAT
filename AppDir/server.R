@@ -59,6 +59,9 @@ function(input, output, session) {
     updateTabItems(session, "tabs", selected = "globalview")
   })
   
-  
+  output$plotnet <- renderPlot({
+    netx <- net[[input$skillg]]
+    plot(ggnet2(netx,label=TRUE))
+  }) 
 }
 
