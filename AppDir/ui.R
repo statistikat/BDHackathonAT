@@ -1,4 +1,4 @@
-dashboardPage(
+dashboardPage(skin = "black",
   dashboardHeader(title = "Jobs / Skills Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",

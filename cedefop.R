@@ -7,6 +7,9 @@ setnames(prof,colnames(prof),c("GeneralId","PublicationCountry","Esco_Level_4","
 prof <- prof[PublicationCountry=="DEUTSCHLAND"]
 prof <- unique(prof)
 prof <- prof[Skill_Esco_Level_0=="Job-specific skills/competences"]
+load("/data/jobgroupsMatch.RData")
+prof <- merge(prof,jobgroupsMatch,by="Esco_Level_2",all.x=TRUE)
+save(prof,file="/data/prof.RData")
 
 expi <- fread("/data/cedefop/ft_skill_profession_experience_en.csv",header=FALSE)
 prof_new <- fread("/data/cedefop/ft_skill_profession_new_en.csv",header=FALSE)
