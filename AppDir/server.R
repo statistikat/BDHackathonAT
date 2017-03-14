@@ -6,7 +6,7 @@ function(input, output, session) {
       value = totalj,
       subtitle = "Total Job Advertisments",
       icon = icon("id-card"),
-      color = "aqua"
+      color = "light-blue"
     )
   })
   output$myMap <- renderLeaflet({
@@ -23,7 +23,7 @@ function(input, output, session) {
     valueBox(
       1e6,
       "Available Labour Force",
-      icon = icon("users")
+      icon = icon("users"),color="light-blue"
     )
   })
   
@@ -33,7 +33,7 @@ function(input, output, session) {
       value = groupjobs[job_groups==input$jobgp,N],
       subtitle = input$jobgp,
       icon = icon("id-card"),
-      color = "aqua"
+      color = "light-blue"
     )
   })
   
@@ -41,7 +41,7 @@ function(input, output, session) {
     valueBox(
       100,
       "Number of Matched seekers",
-      icon = icon("users")
+      icon = icon("users"),color = "light-blue"
     )
   })
   
@@ -60,8 +60,7 @@ function(input, output, session) {
   })
   
   output$plotnet <- renderPlot({
-    netx <- net[[input$skillg]]
-    plot(ggnet2(netx,label=TRUE))
+    plot(ggnet2(net[[input$skillg]],label=TRUE))
   }) 
 }
 
