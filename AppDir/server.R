@@ -1,10 +1,10 @@
 function(input, output, session) {
   output$totaljobs <- renderValueBox({
-    totalj <- 1000
+    totalj <- bubbleData[,sum(value)]
     
     valueBox(
       value = totalj,
-      subtitle = "Total Job Advertisments",
+      subtitle = "Total job opportunities",
       icon = icon("id-card"),
       color = "light-blue"
     )
@@ -22,7 +22,7 @@ function(input, output, session) {
   output$totalseeker <- renderValueBox({
     valueBox(
       1e6,
-      "Available Labour Force",
+      "Available labour force",
       icon = icon("users"),color="light-blue"
     )
   })
@@ -30,7 +30,7 @@ function(input, output, session) {
   output$groupjobs <- renderValueBox({
     
     valueBox(
-      value = groupjobs[job_groups==input$jobgp,N],
+      value = bubbleData[job_groups==input$jobgp,value],
       subtitle = input$jobgp,
       icon = icon("id-card"),
       color = "light-blue"
@@ -40,7 +40,7 @@ function(input, output, session) {
   output$groupseeker <- renderValueBox({
     valueBox(
       100,
-      "Number of Matched seekers",
+      "Number of matched seekers",
       icon = icon("users"),color = "light-blue"
     )
   })

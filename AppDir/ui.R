@@ -1,5 +1,6 @@
 dashboardPage(skin = "black",
-  dashboardHeader(title = "Jobs / Skills Dashboard"),
+  dashboardHeader(title =tags$img(width='200px',src='http://www.kowarik.net/logoS.png')), 
+                    #"Jobs / Skills Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
       menuItem("Europe", tabName = "map"),
@@ -10,6 +11,18 @@ dashboardPage(skin = "black",
     )
   ),
   dashboardBody(
+    tags$style(HTML("
+.box.box-solid.box-info>.box-header{
+background:#666666;
+border-bottom-color:#666666;
+border-left-color:#666666;
+border-right-color:#666666;
+border-top-color:#666666;
+}
+.box.box-solid.box-info {
+border:#666666;
+}
+                    ")),
     tabItems(
        tabItem("map",
                leafletOutput('myMap', width = "80%", height = 500)
@@ -35,7 +48,7 @@ dashboardPage(skin = "black",
               ),
               fluidRow(
                 box(
-                  width = 13, status = "info", solidHeader = TRUE,
+                  width = 12, status = "info", solidHeader = TRUE,
                   title = "Top 5 needed Skills",
                   plotOutput("plotgroup")
                 )
@@ -47,7 +60,7 @@ dashboardPage(skin = "black",
               ),
               fluidRow(
                 box(
-                  width = 13, status = "info", solidHeader = TRUE,
+                  width = 12, status = "info", solidHeader = TRUE,
                   title = "Connected Skills",
                   plotOutput("plotnet")
                 )
