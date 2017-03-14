@@ -45,7 +45,7 @@ function(input, output, session) {
     )
   })
   
-  output$distPlot <- renderPlot({
+  output$distPlot <- renderPlotly({
     print(plotMain(bubbleData))
   }) 
   output$plotgroup <- renderPlot({

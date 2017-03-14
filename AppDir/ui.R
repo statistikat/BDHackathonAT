@@ -23,7 +23,7 @@ dashboardPage(skin = "black",
                 box(
                   width = 13, status = "info", solidHeader = TRUE,
                   title = "Job advertisments per category",
-                  plotOutput("distPlot")
+                  plotlyOutput("distPlot")
                 )
               )
       ),
@@ -43,7 +43,7 @@ dashboardPage(skin = "black",
       ),
       tabItem("skillnet",
               fluidRow(
-                selectInput("skillg", choices = as.list(skilllev1),label="",selected="Computing")
+                selectInput("skillg", choices = as.list(skilllev1),label="ESCO Skill level 1",selected="Computing")
               ),
               fluidRow(
                 box(
