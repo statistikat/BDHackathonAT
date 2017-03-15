@@ -21,8 +21,8 @@ function(input, output, session) {
   })
   output$totalseeker <- renderValueBox({
     valueBox(
-      1e6,
-      "Available labour force",
+      round(npersav,-5),
+      "Available persons",
       icon = icon("users"),color="light-blue"
     )
   })
@@ -39,7 +39,7 @@ function(input, output, session) {
   
   output$groupseeker <- renderValueBox({
     valueBox(
-      100,
+      matched[job_groups==input$jobgp,N],
       "Number of matched seekers",
       icon = icon("users"),color = "light-blue"
     )

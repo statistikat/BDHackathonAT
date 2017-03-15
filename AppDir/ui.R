@@ -31,6 +31,7 @@ border:#666666;
               fluidRow(
                 valueBoxOutput("totaljobs"),
                 valueBoxOutput("totalseeker")
+                
               ),
               fluidRow(
                 box(
