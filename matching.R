@@ -89,40 +89,51 @@ save(prof,file="/data/prof_with_weights.RData",compress=TRUE)
 
 ################################################################################
 # helpfunctions
-sample_help <- function(dat,bound){
+sample_help <- function(dat,bound,jobid){
   
   if(any(!is.na(dat$PersID))){
     potential_employee <- dat[,.N,by=PersID][N>=bound]
     #potential_employee <- dat[,.N,by=ID]
     if(nrow(potential_employee)>0){
       probs <- potential_employee$N/sum(potential_employee$N)
-      sampindex <- sample(nrow(potential_employee),1,prob=probs)
-      return(list(prob=probs[sampindex],PersID=potential_employee$PersID[sampindex]))
+      
+      njob <- length(jobid)
+      nemp <- nrow(potential_employee)
+      sampn <- min(njob,nemp)
+      
+      sampindex <- sample(nemp,sampn,prob=probs)
+      
+      probs <- c(probs[sampindex],rep(NA,njob-sampn))
+      PersID <- c(potential_employee$PersID[sampindex],rep(NA,njob-sampn))
+    
+      return(list(prob=probs,PersID=PersID,GeneralId=jobid))
     }else{
-      return(list(prob=NA_real_,PersID=NA_integer_))
+      return(list(prob=rep(NA_real_,length(jobid)),PersID=rep(NA_integer_,length(jobid)),GeneralId=jobid))
     }
   }else{
-    return(list(prob=NA_real_,PersID=NA_integer_))
+    return(list(prob=rep(NA_real_,length(jobid)),PersID=rep(NA_integer_,length(jobid)),GeneralId=jobid))
   }
 }
 
-sample_help2 <- function(x){
-  if(length(x)>1){
-    return(sample(x,1))
+sample_help2 <- function(GID,ISK,prob){
+  if(length(prob)>1){
+    take <- sample(length(prob),1,prob=prob)
+    return(list(GeneralId=GID[take],ISK=ISK[take]))
   }else{
-    return(x)
+    return(list(GeneralId=GID,ISK=ISK))
   }
 }
 
 split_data <- function(dat,N=10){
   
-  uniqueid <- unique(dat$GeneralId)
+  setkey(dat,ISK)
+  uniqueid <- unique(dat$ISK)
   nparts <- ceiling(length(uniqueid)/N)
   
   finalparts <- c()
   for(i in 1:N){
     id_i <- uniqueid[((i-1)*nparts+1):min(nrow(dat),(i*nparts))]
-    finalparts <- c(finalparts,rep(i,nrow(dat[GeneralId%in%id_i])))
+    finalparts <- c(finalparts,rep(i,nrow(dat[ISK%in%id_i])))
   }
   
   dat[,parts:=finalparts]
@@ -133,11 +144,11 @@ split_data <- function(dat,N=10){
 }
 
 wrap_sample_help1 <- function(dat){
-  return(dat[,sample_help(germany[SKILL],bound=ceiling(.N*.3)),by=GeneralId])
+  return(dat[,sample_help(germany[unique(SKILL)],bound=ceiling(length(unique(SKILL))*.3),jobid=unique(GeneralId)),by=ISK])
 }
 
 wrap_sample_help2 <- function(dat){
-  return(dat[,sample_help(donor_help[SKILL],bound=ceiling(.N*.3)),by=GeneralId])
+  return(dat[,sample_help(donor_help[unique(SKILL)],bound=ceiling(length(unique(SKILL))*.3),jobid=unique(GeneralId)),by=ISK])
 }
 
 ##################################################################################
@@ -159,7 +170,6 @@ setkey(germany,SKILLS)
 index <- unique(prof$GeneralId)
 
 i <- 1:length(index)
-i <- 1:10000
 
 # required skills for job index[i]
 skills.i <- prof[.(index[i]),.(GeneralId,SKILL=Skill_Esco_Level_4)]
@@ -212,23 +222,31 @@ if(class(skills.i)[1]=="character"){
 # 
 # skills.i[,GeneralId:=paste(GeneralId,GeneralId_new,sep="_")]
 # skills.i[,GeneralId_new:=NULL]
+skills.i <- unique(skills.i)
 
+skills.i[,help:=paste(sort(SKILL),collapse="."),by="GeneralId"]
+skills.i[,ISK:=.GRP,by=help]
+skills.i[,help:=NULL]
+
+germany2 <- copy(germany)
 germany <- germany[SKILLS%in%skills.i$SKILL]
-rm(next_ESCO,null_index)
+rm(next_ESCO,null_index,germany2,prof,dat,donor_help,dat_out,i,index,skill.parts)
 #germany[skills.i,.N,by=EACHI]
 #skills.i[,germany[SKILL],by=GeneralId]
 #germany.skills.i <- merge(skills.i,germany[SKILLS%in%skills.i$SKILL,.(SKILLS,ID)],by.x="SKILL",by.y="SKILLS",all.x=TRUE)
 skill.parts <- split_data(skills.i,10)
 
-job_person_match <- mclapply(skill.parts[1],wrap_sample_help1,mc.cores = 8)
+job_person_match <- mclapply(skill.parts,wrap_sample_help1,mc.cores = 10)
+
+#job_person_match <- skills.i[,sample_help(germany[unique(SKILL)],bound=ceiling(length(unique(SKILL))*.3),jobid=unique(GeneralId)),by=ISK]
 
 job_person_match <- rbindlist(job_person_match)
 
 #job_person_match <- skills.i[,sample_help(germany[SKILL],bound=ceiling(.N*.3)),by=GeneralId]
 
-job_person_out <- job_person_match[is.na(PersID),.(GeneralId,PersID)]
+job_person_out <- job_person_match[is.na(PersID),.(GeneralId,PersID,ISK)]
 
-job_person_match <- job_person_match[!is.na(PersID),.(GeneralId=GeneralId[sample_help2(which.max(prob))]),by=PersID]
+job_person_match <- job_person_match[!is.na(PersID),sample_help2(GeneralId,ISK,prob),by=PersID]
 
 job_person_out <- rbind(job_person_out,job_person_match)
 
@@ -239,18 +257,18 @@ setkey(donor_help,SKILLS)
 
 while(nrow(skills.i)>0){
   
-  if(length(unique(skills.i$GeneralId))>500){
+  if(length(unique(skills.i$SKI))>50){
     skill.parts <- split_data(skills.i,10)
     job_person_match <- mclapply(skill.parts,wrap_sample_help2,mc.cores = 8)
     job_person_match <- rbindlist(job_person_match)
   }else{
-    job_person_match <- skills.i[,sample_help(donor_help[SKILL],bound=ceiling(.N*.3)),by=GeneralId]
+    job_person_match <- skills.i[,sample_help(donor_help[unique(SKILL)],bound=ceiling(length(unique(SKILL))*.3),jobid=unique(GeneralId)),by=ISK]
   }
   
   
-  job_person_out <- rbind(job_person_out,job_person_match[is.na(PersID),.(GeneralId,PersID)])
+  job_person_out <- rbind(job_person_out,job_person_match[is.na(PersID),.(GeneralId,PersID,ISK)])
   
-  job_person_match <- job_person_match[!is.na(PersID),.(GeneralId=GeneralId[sample_help2(which.max(prob))]),by=PersID]
+  job_person_match <- job_person_match[!is.na(PersID),sample_help2(GeneralId,ISK,prob),by=PersID]
   
   job_person_out <- rbind(job_person_match,job_person_out)
   
@@ -263,9 +281,9 @@ while(nrow(skills.i)>0){
 
 # number of jobs with multiple selections
 setnames(job_person_out,c("GeneralId"),c("JobID"))
+job_person_out[is.na(PersID)]
 
-
-
+save(job_person_out,file="/data/job_person_match.RData",compress=TRUE)
 
 job_person_out
 job_person_out <- merge(unique(gerLFS2[,.(PersID,PersID)]),job_person_out,by="PersID",all.y=TRUE)

@@ -15,7 +15,7 @@ gerLFS2 <- gerLFS2[,colnames(gerLFS2)[unlist(gerLFS2.na)],with=FALSE]
 gerLFS2 <- gerLFS2[ILOSTAT==2,.SD[rep(1:.N,unique(round(COEFF*1000)))],by="LFSID"]
 gerLFS2[,PersID:=1:nrow(gerLFS2)]
 
-gerLFS2 <- merge(gerLFS2,germany[,.(ID,SKILLS)],by="ID",allow.cartesian=TRUE)
+gerLFS2 <- merge(gerLFS2,unique(germany[,.(ID,SKILLS)]),by="ID",allow.cartesian=TRUE)
 save(gerLFS2,file="/data/gerLFS2_skills.RData",compress=TRUE)
 
 
