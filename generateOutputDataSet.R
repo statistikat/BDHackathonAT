@@ -26,10 +26,14 @@ npersav <- gerLFS2[!duplicated(PersID),.N]
 matched <- merge(gerLFS2[!duplicated(PersID)],job_person_out,by.y="PersID",by.x="PersID")#[LFSID%in%job_person_out[,PersID],,by=job_groups]
 matched <- merge(matched,prof[!duplicated(GeneralId),.(GeneralId,job_groups)],by.x="JobID",by.y="GeneralId")
 matched <- matched[,.N,by=job_groups]
-skillmiss <- prof_open[!SKILL%in%c("Driving"),.N,by=.(SKILL,job_groups)]
+skillmiss <- prof_open[!SKILL%in%c(
+  "General nursing","General nursing","Staff development",
+  "Industry and trade issues",
+  "Electrical engineering","Driving","German language teaching","Computing"),.N,by=.(SKILL,job_groups)]
 skillmiss <- skillmiss[order(N,decreasing = TRUE)]
 skillmiss <- skillmiss[,head(.SD,5),by=.(job_groups)]
 skillm2 <- gerLFS2[,.(avail=.N),by=.(SKILLS)]
-skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS")
-skillmiss[,availability:=avail/sum(avail)]
+skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS",all.x=TRUE)
+skillmiss[,availability:=avail/sum(avail),by="job_groups"]
+skillmiss[is.na(availability),availability:=0]
 save(npersav,skillmiss,matched,file="/data/skillmiss.RData")
