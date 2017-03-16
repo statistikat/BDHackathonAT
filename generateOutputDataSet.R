@@ -10,6 +10,8 @@ load("/data/jobgroupsMatch.RData")
 source("get_esco_skill.R")
 skill <- get_esco(prof)
 prof[,SKILL:=skill[,SKILL]]
+prof[,SKILL:=Skill_Esco_Level_4]
+prof <- prof[!is.null(SKILL)&SKILL!="NULL"]
 prof <- merge(prof,job_quarter,by="GeneralId",all.x=TRUE,all.y=FALSE)
 prof[,QUARTER:=sample(c("Q1","Q2","Q3","Q4"),nrow(prof),rep=TRUE)]
 prof <- merge(prof,esco2[!duplicated(GeneralId)],by="GeneralId",all.x=TRUE,all.y=FALSE)
@@ -28,7 +30,7 @@ matched <- merge(matched,prof[!duplicated(GeneralId),.(GeneralId,job_groups)],by
 matched <- matched[,.N,by=job_groups]
 skillmiss <- prof_open[!SKILL%in%c(
   "General nursing","General nursing","Staff development",
-  "Industry and trade issues",
+  "Industry and trade issues","Health care issues",
   "Electrical engineering","Driving","German language teaching","Computing"),.N,by=.(SKILL,job_groups)]
 skillmiss <- skillmiss[order(N,decreasing = TRUE)]
 skillmiss <- skillmiss[,head(.SD,5),by=.(job_groups)]
