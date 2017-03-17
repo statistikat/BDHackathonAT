@@ -75,7 +75,7 @@ random_round <- function(x){
   n <- nrow(x)
   x <- x[rep(1:n,xr)]
   x[,ID_new:=sort(rep(1:xr,n))]
-
+  
   return(x)
 }
 
@@ -105,7 +105,7 @@ sample_help <- function(dat,bound,jobid){
       
       probs <- c(probs[sampindex],rep(NA,njob-sampn))
       PersID <- c(potential_employee$PersID[sampindex],rep(NA,njob-sampn))
-    
+      
       return(list(prob=probs,PersID=PersID,GeneralId=jobid))
     }else{
       return(list(prob=rep(NA_real_,length(jobid)),PersID=rep(NA_integer_,length(jobid)),GeneralId=jobid))
