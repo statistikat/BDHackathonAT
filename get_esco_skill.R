@@ -3,7 +3,7 @@
 # get ESCO LEVELS from 4-1
 
 
-get_esco <- function(x){
+get_skill <- function(x){
   
   skills <- x[,.(GeneralId,SKILL=Skill_Esco_Level_4)]
   j <- 1
