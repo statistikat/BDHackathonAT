@@ -5,7 +5,8 @@
 
 get_skills <- function(x,hierarchy=c("Skill_Esco_Level_4","Skill_Esco_Level_3","Skill_Esco_Level_2","Skill_Esco_Level_1")){
   
-  skills <- x[,.(JobID,SKILLS=get(hierarchy[1]))]
+  skills <- x[,c("JobID",hierarchy[1]),with=FALSE]
+  setnames(skills,hierarchy[1],"SKILLS")
   j <- 1
   if(class(skills)[1]=="character"){
     
@@ -17,11 +18,12 @@ get_skills <- function(x,hierarchy=c("Skill_Esco_Level_4","Skill_Esco_Level_3","
     }
     
   }else{
-    while(any(skills$SKILL=="NULL")){
-      null_index <- skills$SKILL=="NULL"
+    while(any(skills$SKILLS=="NULL")){
+      null_index <- skills$SKILLS=="NULL"
       j <- j+1
-      next_ESCO <- x[,.(JobID,SKILL=get(JobID,SKILLS=get(hierarchy[j])))]
-      skills[SKILL=="NULL",SKILLW:=next_ESCO$SKILLS[null_index]]
+      next_ESCO <- x[,c("JobID",hierarchy[j]),with=FALSE]
+      setnames(next_ESCO,hierarchy[j],"SKILLS")
+      skills[SKILLS=="NULL",SKILLS:=next_ESCO$SKILLS[null_index]]
       
     }
   }

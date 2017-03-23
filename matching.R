@@ -12,6 +12,14 @@ prof <- prof[PublicationCountry=="DEUTSCHLAND"]
 prof <- unique(prof)
 prof <- prof[Skill_Esco_Level_0=="Job-specific skills/competences"]
 
+expi <- fread("/data/cedefop/ft_skill_profession_experience_en.csv",header=FALSE)
+prof_new <- fread("/data/cedefop/ft_skill_profession_new_en.csv",header=FALSE)
+requ <- fread("/data/cedefop/ft_skill_profession_requirement_en.csv",header=FALSE)
+
+colnames(expi) <- colnames(prof_new) <- colnames(requ) <- c("GeneralId","PublicationCountry","Esco_Level_4","Esco_Level_3","Esco_Level_2","Esco_Level_1","IdEsco_Skill","NGram") 
+
+
+
 doc <- fread("/data/cedefop/ft_document_en.csv",header=FALSE)
 setnames(doc,colnames(doc),c("GeneralId","PublicationCountry","GrabDate","YearGrabDate","MonthGrabDate",
                              "DayGrabDate","ExpireDate","YearExpireDate","MonthExpireDate","DayExpireDate",
@@ -19,6 +27,8 @@ setnames(doc,colnames(doc),c("GeneralId","PublicationCountry","GrabDate","YearGr
                              "Nut_Level_2","Nut_Level_1","Nut_Level_0","Contract","EducationalLevel","Industry_Level_2",
                              "Industry_Level_1","WorkingHours"))
 
+
+test <- merge(doc[PublicationCountry=="DEUTSCHLAND"],prof,by="GeneralId",allow.cartesian=TRUE)
 
 doc[,QUARTER:=if(MonthGrabDate[1]<=3){'Q1'}else if(MonthGrabDate[1]<=6){'Q2'}else if(MonthGrabDate[1]<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
 job_quarter <- unique(doc[,.(GeneralId,QUARTER)])
