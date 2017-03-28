@@ -102,6 +102,18 @@ load("/data/jobgroupsMatch.RData")
 # source("get_esco_skill.R")
 # skill <- get_esco(prof)
 # prof[,SKILL:=skill[,SKILL]]
+jobs_doc <- fread("/data/cedefop/ft_document_en.csv",header=FALSE)
+setnames(jobs_doc,colnames(jobs_doc),c("JobID","PublicationCountry","GrabDate","YearGrabDate","MonthGrabDate",
+                                       "DayGrabDate","ExpireDate","YearExpireDate","MonthExpireDate","DayExpireDate",
+                                       "Esco_Level_4","Esco_Level_3","Esco_Level_2","Esco_Level_1","Nut_Level_3",
+                                       "Nut_Level_2","Nut_Level_1","Nut_Level_0","Contract","EducationalLevel","Industry_Level_2",
+                                       "Industry_Level_1","WorkingHours"))
+jobs_doc <- jobs_doc[PublicationCountry=="DEUTSCHLAND"]
+jobs_doc[,QUARTER:=if(as.numeric(MonthGrabDate[1])<=3){'Q1'}else if(as.numeric(MonthGrabDate[1])<=6){'Q2'}else if(as.numeric(MonthGrabDate[1])<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
+
+jobs_doc <- jobs_doc[JobID%in%jobs$JobID]
+
+
 
 jobs[,SKILL:=Skill_Esco_Level_4]
 jobs <- jobs[SKILL!="NULL"]
@@ -112,12 +124,13 @@ jobs <- merge(jobs,jobgroupsMatch,by="Esco_Level_2",all.x=TRUE,all.y=FALSE)
 
 
 bubbleData <- jobs[!duplicated(JobID_o),.(value=.N),by=.(job_groups,QUARTER)]
-jobs_open <- jobs[!duplicated(JobID_o)&JobID_o%in%out1[is.na(PersID),JobID_o]]#merge(prof,job_person_out[is.na(PersID)],by.x="GeneralId",by.y="JobID2")
+jobs_open <- jobs[(!duplicated(JobID_o))&JobID_o%in%out1[is.na(PersID)]$JobID_o]#merge(prof,job_person_out[is.na(PersID)],by.x="GeneralId",by.y="JobID2")
 #prof_open[,QUARTER:=sample(c("Q1","Q2","Q3","Q4"),nrow(prof_open),rep=TRUE)]
 bubbleData <- merge(bubbleData,jobs_open[,.(nonFilled=.N),by=.(job_groups,QUARTER)],by=c("job_groups","QUARTER"),all.x=TRUE)
 bubbleData[is.na(nonFilled),nonFilled:=0]
 bubbleData[,pressure:=nonFilled/value]
 save(bubbleData,file="/data/bubbleData.RData")
+load("/data/bubbleData.RData")
 npersav <- persons[!duplicated(PersID),.N]
 matched <- merge(persons[!duplicated(PersID)],out1,by.y="PersID",by.x="PersID")#[LFSID%in%job_person_out[,PersID],,by=job_groups]
 matched <- merge(matched,jobs[!duplicated(JobID_o),.(JobID_o,job_groups)],by="JobID_o")
@@ -127,12 +140,27 @@ skillmiss <- jobs_open[!SKILL%in%c(
   "Industry and trade issues","Health care issues",
   "Electrical engineering","Driving","German language teaching","Computing"),.N,by=.(SKILL,job_groups)]
 skillmiss <- skillmiss[order(N,decreasing = TRUE)]
-skillmiss <- skillmiss[,head(.SD,5),by=.(job_groups)]
-skillm2 <- persons[!PersID%in%out1[,PersID],.(avail=.N),by=.(SKILLS)]
+skillmiss <- skillmiss[,head(.SD,10),by=.(job_groups)]
+
+load("/data/jobs_expanded.RData")
+jobs[,JobID:=paste(JobID,ID_new)]
+skillmiss.impact <- skillmiss[,skill.impact(p=persons[!PersID%in%out1$PersID],j=jobs[JobID%in%out1[is.na(PersID)]],bound=0,sk=.BY),by="SKILL"]
+
+skillm2 <- persons[!PersID%in%out1$PersID,.(avail=.N),by=.(SKILLS)]
 skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS",all.x=TRUE)
 skillmiss[,availability:=avail/sum(avail),by="job_groups"]
 skillmiss[is.na(availability),availability:=0]
 save(npersav,skillmiss,matched,file="/data/skillmiss.RData")
+load("/data/skillmiss.RData")
+
+skill.impact <- function(p,j,bound,sk){
+  add.p <- unique(p[,.(ID,PersID)])
+  add.p[,SKILLS:=sk]
+  p <- rbind(p,add.p)
+
+  jp <- matching(persons=p,jobs=j,bound=0,match_vars=c("SKILLS"),mc.cores=0)
+  return(nrow(jp[!is.na(PersID)]))
+}
 
 
 
