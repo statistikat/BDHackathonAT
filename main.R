@@ -72,14 +72,68 @@ persons <- merge_pers_skill_lfs(pers_skill,lfs,match_var=c("OCCUP_L0_CODE","SEX"
 source('read_cedefop.R')
 
 jobs <- merge_skill_jvs(jobs=jobs,jobs_doc=jobs_doc,keep_var=c("EducationalLevel","Nut_Level_1"))
-rm(jobs_doc)
-
+#rm(jobs_doc)
+save(jobs,file="/data/jobs_expanded.RData",compress=TRUE)
+load("/data/jobs_expanded.RData")
 persons <- merge(persons[,.(ID,PersID)],pers_skill[,.(ID,SKILLS)],by="ID",allow.cartesian=TRUE)
 
 rm(lfs,pers_skill,lfs.na)
 gc()
 jobs[,JobID:=paste(JobID,ID_new)]
-out1 <- matching(persons=persons,jobs=jobs,bound=.3,match_vars=c("SKILLS"),mc.cores=10,mc.groups=50)
+out1 <- matching(persons=persons,jobs=jobs,bound=0,match_vars=c("SKILLS"),mc.cores=10,mc.groups=50)
 save(out1,file="/data/final_results.RData",compress=TRUE)
+
+
+
+#out1[,JobID_o:=JobID]
+out1[,JobID_o:=JobID]
+out1[,JobID:=unlist(lapply(strsplit(JobID," "),`[[`,1))]
+jobs[,JobID_o:=JobID]
+jobs[,JobID:=unlist(lapply(strsplit(JobID_o," "),`[[`,1))]
+
+# needs out1 / jobs (un-expandend) / persons
+# prepare data for visualization
+#
+# esco2 <- jobs[,.(JobID,Esco_Level_2)]
+# rm(prof);gc()
+# load("/data/prof_with_weights.RData")
+# load("/data/job_quarter.RData")
+load("/data/jobgroupsMatch.RData")
+# source("get_esco_skill.R")
+# skill <- get_esco(prof)
+# prof[,SKILL:=skill[,SKILL]]
+
+jobs[,SKILL:=Skill_Esco_Level_4]
+jobs <- jobs[SKILL!="NULL"]
+jobs <- merge(jobs,unique(jobs_doc[,.(JobID,QUARTER,Esco_Level_2)]),by="JobID",all.x=TRUE,all.y=FALSE)
+#jobs[,QUARTER:=sample(c("Q1","Q2","Q3","Q4"),nrow(jobs),rep=TRUE)]
+#jobs <- merge(jobs,esco2[!duplicated(GeneralId)],by="GeneralId",all.x=TRUE,all.y=FALSE)
+jobs <- merge(jobs,jobgroupsMatch,by="Esco_Level_2",all.x=TRUE,all.y=FALSE)
+
+
+bubbleData <- jobs[!duplicated(JobID_o),.(value=.N),by=.(job_groups,QUARTER)]
+jobs_open <- jobs[!duplicated(JobID_o)&JobID_o%in%out1[is.na(PersID),JobID_o]]#merge(prof,job_person_out[is.na(PersID)],by.x="GeneralId",by.y="JobID2")
+#prof_open[,QUARTER:=sample(c("Q1","Q2","Q3","Q4"),nrow(prof_open),rep=TRUE)]
+bubbleData <- merge(bubbleData,jobs_open[,.(nonFilled=.N),by=.(job_groups,QUARTER)],by=c("job_groups","QUARTER"),all.x=TRUE)
+bubbleData[is.na(nonFilled),nonFilled:=0]
+bubbleData[,pressure:=nonFilled/value]
+save(bubbleData,file="/data/bubbleData.RData")
+npersav <- persons[!duplicated(PersID),.N]
+matched <- merge(persons[!duplicated(PersID)],out1,by.y="PersID",by.x="PersID")#[LFSID%in%job_person_out[,PersID],,by=job_groups]
+matched <- merge(matched,jobs[!duplicated(JobID_o),.(JobID_o,job_groups)],by="JobID_o")
+matched <- matched[,.N,by=job_groups]
+skillmiss <- jobs_open[!SKILL%in%c(
+  "General nursing","General nursing","Staff development",
+  "Industry and trade issues","Health care issues",
+  "Electrical engineering","Driving","German language teaching","Computing"),.N,by=.(SKILL,job_groups)]
+skillmiss <- skillmiss[order(N,decreasing = TRUE)]
+skillmiss <- skillmiss[,head(.SD,5),by=.(job_groups)]
+skillm2 <- persons[!PersID%in%out1[,PersID],.(avail=.N),by=.(SKILLS)]
+skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS",all.x=TRUE)
+skillmiss[,availability:=avail/sum(avail),by="job_groups"]
+skillmiss[is.na(availability),availability:=0]
+save(npersav,skillmiss,matched,file="/data/skillmiss.RData")
+
+
 
 

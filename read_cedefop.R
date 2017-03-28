@@ -30,6 +30,6 @@ jobs_doc <- jobs_doc[PublicationCountry=="DEUTSCHLAND"]
 
 jobs_doc <- jobs_doc[JobID%in%jobs$JobID]
 
-jobs_doc[,QUARTER:=if(MonthGrabDate[1]<=3){'Q1'}else if(MonthGrabDate[1]<=6){'Q2'}else if(MonthGrabDate[1]<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
+jobs_doc[,QUARTER:=if(as.numeric(MonthGrabDate[1])<=3){'Q1'}else if(as.numeric(MonthGrabDate[1])<=6){'Q2'}else if(as.numeric(MonthGrabDate[1])<=9){'Q3'}else{'Q4'},by=MonthGrabDate]
 
   

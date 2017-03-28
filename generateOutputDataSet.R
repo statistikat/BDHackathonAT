@@ -1,5 +1,5 @@
 library(data.table)
-load("/data/job_person_out_final2.RData")
+load("/data/final_results.RData")
 load("/data/gerLFS2_skills.RData")
 load("/data/prof.RData")
 esco2 <- prof[,.(GeneralId,Esco_Level_2)]

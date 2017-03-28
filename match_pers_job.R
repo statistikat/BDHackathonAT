@@ -16,7 +16,7 @@ matching <- function(persons,jobs,bound=.3,match_vars=c("SKILLS","DES_OCCUPATION
   
   #
   setkeyv(persons,match_vars)
-  donor_persons <- persons[SKILLS%in%jobs_skills$SKILLS]
+  donor_persons <- unique(persons[SKILLS%in%jobs_skills$SKILLS])
   # clean memory before parallize
   rm(jobs,persons)
   gc()
@@ -28,15 +28,23 @@ matching <- function(persons,jobs,bound=.3,match_vars=c("SKILLS","DES_OCCUPATION
     jobs_skills.parts <- split_data(jobs_skills,mc.cores)
   
     job_person_match <- mclapply(jobs_skills.parts,wrap_sample_help,donor_persons,bound,match_vars,mc.cores = mc.cores)
+    
     job_person_match <- rbindlist(job_person_match)
     
   }else{
     job_person_match <- jobs_skills[,sample_help(donor_persons[unique(.SD[,match_vars,with=FALSE])],bound=ceiling(length(unique(SKILLS))*bound),jobid=unique(JobID)),by=JOB_GROUPS]
+
+    #job_person_match2 <- jobs_skills[,sample_help(donor_persons[unique(.SD[,match_vars,with=FALSE])],bound=ceiling(length(unique(SKILLS))*bound),jobid=unique(JobID)),by=JOB_GROUPS]
+    #SD <- jobs_skills[JOB_GROUPS==2498]
+    #dat <- donor_persons[unique(SD[,match_vars,with=FALSE])]
+
   }
   
+  # donor_persons[!PersID%in%job_person_match$PersID][SKILLS%in%jobs_skills[JobID%in%job_person_match[is.na(PersID)]$JobID]$SKILLS]
+  #
   # create output file
   # exist of jobs which have no potential person to occupie and jobs for which an potential employee was found
-  job_person_out <- job_person_match[is.na(PersID),.(JobID,PersID),JOB_GROUPS]
+  job_person_out <- job_person_match[is.na(PersID),.(JobID,PersID,JOB_GROUPS)]
   
   # if person was listed for more than one job, select job for which poerson has moste matching SKILLSS
   job_person_match <- job_person_match[!is.na(PersID),sample_help2(JobID,JOB_GROUPS,Number),by=PersID]
@@ -88,6 +96,7 @@ matching <- function(persons,jobs,bound=.3,match_vars=c("SKILLS","DES_OCCUPATION
 sample_help <- function(dat,bound,jobid){
   
   if(any(!is.na(dat$PersID))){
+    dat <- na.omit(dat)
     # condition on potential occupants
     potential_employee <- dat[,.N,by=PersID][N>=bound]
     #potential_employee <- dat[,.N,by=ID]
