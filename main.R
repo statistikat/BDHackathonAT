@@ -80,6 +80,11 @@ persons <- merge(persons[,.(ID,PersID)],pers_skill[,.(ID,SKILLS)],by="ID",allow.
 rm(lfs,pers_skill,lfs.na)
 gc()
 jobs[,JobID:=paste(JobID,ID_new)]
+
+
+load("~/BDHackathonAT/data/persons.RData")
+load("~/BDHackathonAT/data/jobs.RData")
+
 out1 <- matching(persons=persons,jobs=jobs,bound=0,match_vars=c("SKILLS"),mc.cores=10,mc.groups=50)
 save(out1,file="/data/final_results.RData",compress=TRUE)
 
@@ -144,21 +149,32 @@ skillmiss <- skillmiss[,head(.SD,10),by=.(job_groups)]
 
 load("/data/jobs_expanded.RData")
 jobs[,JobID:=paste(JobID,ID_new)]
-skillmiss.impact <- skillmiss[,skill.impact(p=persons[!PersID%in%out1$PersID],j=jobs[JobID%in%out1[is.na(PersID)]],bound=0,sk=.BY),by="SKILL"]
+
+p <- persons[PersID%in%sample(unique(PersID),100000)]
+j <- jobs[JobID%in%sample(unique(JobID),10000)]
+
+p <- persons[!PersID%in%out1$PersID]
+j <- jobs[JobID%in%out1[is.na(PersID)]]
+
+skillmiss.impact <- skillmiss[,skill.impact(p=p,j=j,bound=0,sk=.BY),by="SKILL"]
 
 skillm2 <- persons[!PersID%in%out1$PersID,.(avail=.N),by=.(SKILLS)]
 skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS",all.x=TRUE)
+skillmiss[is.na(avail),avail:=0]
 skillmiss[,availability:=avail/sum(avail),by="job_groups"]
-skillmiss[is.na(availability),availability:=0]
+#skillmiss[is.na(availability),availability:=0]
 save(npersav,skillmiss,matched,file="/data/skillmiss.RData")
 load("/data/skillmiss.RData")
 
 skill.impact <- function(p,j,bound,sk){
   add.p <- unique(p[,.(ID,PersID)])
   add.p[,SKILLS:=sk]
-  p <- rbind(p,add.p)
-
-  jp <- matching(persons=p,jobs=j,bound=0,match_vars=c("SKILLS"),mc.cores=0)
+  p <- unique(rbind(p,add.p))
+  
+  j[,index:=any(Esco_level_4_skill==sk),by=JobID_o]
+  j <- j[index==TRUE]
+  
+  jp <- matching(persons=p,jobs=j,bound=.3,match_vars=c("SKILLS"),mc.cores=2)
   return(nrow(jp[!is.na(PersID)]))
 }
 

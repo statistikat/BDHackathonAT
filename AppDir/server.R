@@ -30,8 +30,8 @@ function(input, output, session) {
   output$groupjobs <- renderValueBox({
     
     valueBox(
-      value = bubbleData[job_groups==input$jobgp,value],
-      subtitle = input$jobgp,
+      value = sum(bubbleData[job_groups==input$jobgp,value]),
+      subtitle = "Number of non-filled vaccancies",
       icon = icon("id-card"),
       color = "light-blue"
     )
@@ -39,8 +39,8 @@ function(input, output, session) {
   
   output$groupseeker <- renderValueBox({
     valueBox(
-      matched[job_groups==input$jobgp,N],
-      "Number of matched seekers",
+      npersav-matched[,sum(N)],
+      "Number of unmatched seekers",
       icon = icon("users"),color = "light-blue"
     )
   })
