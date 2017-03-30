@@ -6,6 +6,7 @@
 library(data.table)
 library(VIM)
 library(stringr)
+library(parallel)
 
 source('random_round.R')
 source('read_eures.R')
@@ -82,12 +83,17 @@ gc()
 jobs[,JobID:=paste(JobID,ID_new)]
 
 
-load("~/BDHackathonAT/data/persons.RData")
+
 load("~/BDHackathonAT/data/jobs.RData")
+jobs[,Skill_Esco_Level_1:=as.character(Skill_Esco_Level_1)]
+jobs[,Skill_Esco_Level_2:=as.character(Skill_Esco_Level_2)]
+jobs[,Skill_Esco_Level_3:=as.character(Skill_Esco_Level_3)]
+jobs[,Skill_Esco_Level_4:=as.character(Skill_Esco_Level_4)]
+load("~/BDHackathonAT/data/persons.RData")
 
 out1 <- matching(persons=persons,jobs=jobs,bound=0,match_vars=c("SKILLS"),mc.cores=10,mc.groups=50)
 save(out1,file="/data/final_results.RData",compress=TRUE)
-
+load("/data/final_results.RData")
 
 
 #out1[,JobID_o:=JobID]
@@ -150,31 +156,40 @@ skillmiss <- skillmiss[,head(.SD,10),by=.(job_groups)]
 load("/data/jobs_expanded.RData")
 jobs[,JobID:=paste(JobID,ID_new)]
 
-p <- persons[PersID%in%sample(unique(PersID),100000)]
-j <- jobs[JobID%in%sample(unique(JobID),10000)]
+p <- persons[PersID%in%sample(unique(PersID),50000)]
+j <- jobs[JobID%in%sample(unique(JobID),500000)]
+
+rm(persons,jobs)
 
 p <- persons[!PersID%in%out1$PersID]
 j <- jobs[JobID%in%out1[is.na(PersID)]]
 
-skillmiss.impact <- skillmiss[,skill.impact(p=p,j=j,bound=0,sk=.BY),by="SKILL"]
+sk_all <- unique(skillmiss$SKILL)
+n_more <- rep(0,length(sk_all))
+
+for(i in 1:length(sk_all)){
+  n_more[i] <- skill.impact(p=p,j=j,bound=.6,sk=sk_all[i])
+}
+
+skillmiss.impact <- data.table(SKILL=sk_all,N_More=n_more)
+
 
 skillm2 <- persons[!PersID%in%out1$PersID,.(avail=.N),by=.(SKILLS)]
 skillmiss <- merge(skillmiss,skillm2,by.x="SKILL",by.y="SKILLS",all.x=TRUE)
 skillmiss[is.na(avail),avail:=0]
 skillmiss[,availability:=avail/sum(avail),by="job_groups"]
 #skillmiss[is.na(availability),availability:=0]
-save(npersav,skillmiss,matched,file="/data/skillmiss.RData")
+save(npersav,skillmiss,matched,file="data/skillmiss.RData")
 load("/data/skillmiss.RData")
 
 skill.impact <- function(p,j,bound,sk){
   add.p <- unique(p[,.(ID,PersID)])
   add.p[,SKILLS:=sk]
-  p <- unique(rbind(p,add.p))
+
+  j[,index:=any(Skill_Esco_Level_4==sk),by=JobID]
   
-  j[,index:=any(Esco_level_4_skill==sk),by=JobID_o]
-  j <- j[index==TRUE]
-  
-  jp <- matching(persons=p,jobs=j,bound=.3,match_vars=c("SKILLS"),mc.cores=2)
+  jp <- matching(persons=unique(rbind(p,add.p)),jobs=j[index==TRUE],bound=bound,match_vars=c("SKILLS"),mc.cores=1)
+  rm(add.p)
   return(nrow(jp[!is.na(PersID)]))
 }
 
