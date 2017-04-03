@@ -63,6 +63,7 @@ There are 3 different plots per country which show:
 
 1. A bubble chart presenting an overview of the number of vacant jobs per quarter and job groups.
     + The size of the bubbles indicate the number of vacant jobs and the colour indicates the 'pressure', meaning the share of matched job vacancies, to the total number of vacant jobs per job group. 
-2. A barplot indicating the top 5 most needed skills per job group of the *unassignable* job vacancies and the impact on the job market if the unemployed population is taught each of those skills.
-    + The left axis on the bar plot shows the number of jobs for which this skill is job-specific and the colour coding indicates the share of job-seekers which would occupy the *unassignable* jobs if they were taught this skill. 
+2. A barplot indicating the top 10 most needed skills per job group of the *unassignable* job vacancies and the impact on the job market if the unemployed population is taught each of those skills.
+    + The left axis on the bar plot shows the number of jobs for which this skill is job-specific.
+    + The colour coding indicates for each skill the number of jobs that would be occupied if that skill would be taught to the unemployed population.
 3. A Netgraph which shows, for each job group, the most listed job-specific skills and if they often appear together on job vacancy listings.

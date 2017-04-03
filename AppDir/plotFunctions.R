@@ -45,17 +45,21 @@ plotMain <- function(bubbleData){
 
 # plotBar: nur 2 farben
 plotBar <- function(skillmiss, jobgruppe){ #bei jobgruppe namen eingeben
-  dat <- skillmiss[which(skillmiss$job_groups==jobgruppe),]
-  dat$SKILL <- factor(dat$SKILL, levels = dat$SKILL)
-  dat$sign <- ifelse(dat$availability >= 0.06, "positive", "negative")
+  dat <- skillmiss[job_groups==jobgruppe,]
+  #dat$SKILL <- factor(unique(dat$SKILL), levels = dat$SKILL)
+  #dat$sign <- ifelse(dat$availability >= 0.06, "positive", "negative")
   
-  dat[,SKILL:=factor(SKILL,levels=SKILL[sort(N,decreasing=TRUE,index.return=TRUE)$ix])]
+  dat[,SKILL:=factor(SKILL,levels=unique(dat$SKILL[sort(dat$value,decreasing=TRUE,index.return=TRUE)$ix]))]
+  levels(dat$SKILL) <- gsub("\\/","",levels(dat$SKILL))
+  levels(dat$SKILL) <- gsub("\\s+"," ",levels(dat$SKILL))
+  levels(dat$SKILL) <- gsub(" ", "\n", levels(dat$SKILL))
   
-  g <- ggplot(data=dat, aes(x=SKILL, y=N, fill=availability)) +
-    geom_bar(colour="black", stat="identity") +
-    guides(fill=FALSE) +
-    scale_fill_gradient(high = "lightsteelblue", low = "indianred3")+
-    theme_bw()+
+  g <- ggplot(data=dat, aes(x=SKILL, y=value, fill=variable)) +
+    geom_bar(colour="black", stat="identity") + 
+    scale_fill_manual(values=c("lightsteelblue","indianred3"))+
+    theme(legend.title=element_blank(),
+          legend.justification=c(1,1), legend.position=c(1,1),
+          legend.text = element_text(size = 13))+
     theme(axis.text.x = element_text(size=13), 
           axis.text.y = element_text(size=13), 
           axis.title.x= element_text(size=15),
@@ -64,7 +68,7 @@ plotBar <- function(skillmiss, jobgruppe){ #bei jobgruppe namen eingeben
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
           panel.background = element_blank()) +
-    ylab("") +
+    ylab("") + xlab("") +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
   #ggplotly(g)
   g

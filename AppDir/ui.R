@@ -50,7 +50,7 @@ border:#666666;
               fluidRow(
                 box(
                   width = 12, status = "info", solidHeader = TRUE,
-                  title = "Top 5 needed Skills",
+                  title = "Top 10 needed Skills",
                   plotOutput("plotgroup")
                 )
               )

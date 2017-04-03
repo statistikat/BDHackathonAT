@@ -109,7 +109,8 @@ jobs[,JobID:=unlist(lapply(strsplit(JobID_o," "),`[[`,1))]
 # rm(prof);gc()
 # load("/data/prof_with_weights.RData")
 # load("/data/job_quarter.RData")
-load("/data/jobgroupsMatch.RData")
+load("data/jobgroupsMatch.RData")
+jobgroupsMatch <- jobgroupsMatch[job_groups!="Armed forces occupations "]
 # source("get_esco_skill.R")
 # skill <- get_esco(prof)
 # prof[,SKILL:=skill[,SKILL]]
