@@ -16,3 +16,12 @@ random_round <- function(x,w,group){
   
   return(cbind(x,group))
 }
+
+
+random_round2 <- function(x){
+  if(sample(1)==1){
+    return(ceiling(x))
+  }else{
+    return(floor(x))
+  }
+}

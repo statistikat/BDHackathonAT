@@ -13,7 +13,7 @@ matching <- function(persons,jobs,bound=.3,match_vars=c("SKILLS","DES_OCCUPATION
   jobs_skills[,help:=paste(sort(SKILLS),collapse="."),by=JobID]
   jobs_skills[,JOB_GROUPS:=.GRP,by=help]
   jobs_skills[,help:=NULL]
-  
+  #save(jobs_skills,file="jobs_skills.RData",compress=TRUE)
   #
   setkeyv(persons,match_vars)
   donor_persons <- unique(persons[SKILLS%in%jobs_skills$SKILLS])
@@ -26,21 +26,22 @@ matching <- function(persons,jobs,bound=.3,match_vars=c("SKILLS","DES_OCCUPATION
   if(mc.cores>1){
     
     jobs_skills.parts <- split_data(jobs_skills,mc.cores)
-  
+    
     job_person_match <- mclapply(jobs_skills.parts,wrap_sample_help,donor_persons,bound,match_vars,mc.cores = mc.cores)
     
     job_person_match <- rbindlist(job_person_match)
     
   }else{
     job_person_match <- jobs_skills[,sample_help(donor_persons[unique(.SD[,match_vars,with=FALSE])],bound=ceiling(length(unique(SKILLS))*bound),jobid=unique(JobID)),by=JOB_GROUPS]
-
+    
     #job_person_match2 <- jobs_skills[,sample_help(donor_persons[unique(.SD[,match_vars,with=FALSE])],bound=ceiling(length(unique(SKILLS))*bound),jobid=unique(JobID)),by=JOB_GROUPS]
     #SD <- jobs_skills[JOB_GROUPS==2498]
     #dat <- donor_persons[unique(SD[,match_vars,with=FALSE])]
-
+    
   }
   
   # donor_persons[!PersID%in%job_person_match$PersID][SKILLS%in%jobs_skills[JobID%in%job_person_match[is.na(PersID)]$JobID]$SKILLS]
+  # save(job_person_match,file="job_match_1.RData",compress=TRUE)
   #
   # create output file
   # exist of jobs which have no potential person to occupie and jobs for which an potential employee was found
