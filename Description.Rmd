@@ -53,7 +53,7 @@ This approach matches the unemployed population from $PD$ to the vacant jobs fro
 
 3. Repeat steps 1 and 2 until all jobs have an assigned person or are flagged as *unassignable*.
 
-For the prototype $\alpha$ was set to $0$ as we did not want to impact the results by taking an arbitrary value for $\alpha$.  
+For the prototype $\alpha$ was set to $0.3$.  
 Please note that this algorithm can easily be extended with additional Information, for example choosing $PD_j$ through $\alpha$ and desired occupation or desired residence. As stated before this was not done due to time limitations. It's also straight forward to introduce additional expert knowledge in the sampling process e.g. an importance rating between job-specific skills. 
 
 
